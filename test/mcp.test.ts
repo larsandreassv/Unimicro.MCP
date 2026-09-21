@@ -51,6 +51,7 @@ describe('tools/list', () => {
         const tools: any[] = body.result.tools;
 
         expect(tools.map(t => t.name)).toContain('check_api_access');
+        expect(tools.map(t => t.name)).toContain('get_active_products');
 
         const [tool] = tools;
         expect(tool.title).toBeTruthy();
@@ -58,6 +59,64 @@ describe('tools/list', () => {
         expect(tool.inputSchema).toBeTruthy();
         expect(tool.outputSchema).toBeTruthy();
         expect(tool.annotations.readOnlyHint).toBe(true);
+    });
+});
+
+describe('get_active_products', () => {
+    const call = (arguments_: Record<string, unknown> = {}, headers?: Record<string, string>) =>
+        mcpCall(app.baseUrl, 'tools/call', { name: 'get_active_products', arguments: arguments_ }, { name: 'get_active_products', headers });
+
+    it('requests active purchases for the resolved company and returns stable product fields', async () => {
+        const requests: Array<{ url: string; headers: Headers }> = [];
+        vi.stubGlobal('fetch', async (input: any, init?: any) => {
+            const url = input instanceof URL ? input.href : typeof input === 'string' ? input : input.url;
+            if (url.includes('/api/elsa/purchases')) {
+                requests.push({ url, headers: new Headers(init?.headers) });
+                return new Response(JSON.stringify([
+                    {
+                        ID: 10,
+                        ProductID: 20,
+                        ProductName: 'Payroll',
+                        ProductKey: 'payroll',
+                        PurchaseStatus: 1,
+                        CompanyKey: 'ignored-by-request',
+                        StartDate: '2026-01-01',
+                        EndDate: '2026-12-31',
+                        CreatorName: 'Not exposed',
+                    },
+                    { ID: 11, ProductID: 21, ProductName: 'Inactive', PurchaseStatus: 2 },
+                ]), { headers: { 'content-type': 'application/json' } });
+            }
+            return realFetch(input, init);
+        });
+
+        const { body } = await call({}, { CompanyKey: 'company-from-host' });
+
+        expect(requests).toHaveLength(1);
+        expect(requests[0]?.url).toContain('/api/elsa/purchases?PurchaseStatus=1');
+        expect(requests[0]?.headers.get('CompanyKey')).toBe('company-from-host');
+        expect(body.result.structuredContent).toEqual({
+            products: [{
+                purchaseId: 10,
+                productId: 20,
+                productKey: 'payroll',
+                productName: 'Payroll',
+                purchaseStatus: 1,
+                startDate: '2026-01-01',
+                endDate: '2026-12-31',
+                productTypeName: null,
+            }],
+        });
+        expect(body.result.content[0].text).toBe('1 active product.');
+    });
+
+    it('returns an empty list when the company has no active purchases', async () => {
+        stubUnimicro({ '/api/elsa/purchases': [] });
+
+        const { body } = await call({}, { CompanyKey: 'company-from-host' });
+
+        expect(body.result.structuredContent).toEqual({ products: [] });
+        expect(body.result.content[0].text).toBe('0 active products.');
     });
 });
 
