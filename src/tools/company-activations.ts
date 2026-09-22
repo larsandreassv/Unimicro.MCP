@@ -31,9 +31,9 @@ export function registerCompanyActivationsTool(server: McpServer, ctx: ToolConte
             title: 'Get company activations',
             description:
                 'List the modules, integrations, and products activated for a Unimicro company. ' +
-                'Omit companyKey unless company selection is ambiguous.',
+                'Pass the companyKey for the company to inspect.',
             inputSchema: z.object({
-                companyKey: z.string().uuid().optional().describe('Which company. Omit unless company selection is ambiguous.'),
+                companyKey: z.string().uuid().describe('The company to inspect.'),
             }),
             outputSchema: z.object({
                 products: z.array(activeProductSchema),

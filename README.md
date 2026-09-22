@@ -87,8 +87,8 @@ servers already listed — click **Add Servers → + Add manually**, then choose
 
 Sign in when the browser opens, then call `check_api_access` — it lists the companies your
 account can reach, which confirms the whole chain works. Use `get_company_activations` to
-list the modules, integrations, and products activated for a selected company; pass
-`companyKey` when your account can access more than one company.
+list the modules, integrations, and products activated for a selected company; it requires
+the company's `companyKey`.
 
 Need a bearer token for `curl` or a script? `npm run token` prints a sign-in URL and hands
 you one.

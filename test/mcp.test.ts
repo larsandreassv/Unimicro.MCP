@@ -66,6 +66,13 @@ describe('get_company_activations', () => {
     const call = (arguments_: Record<string, unknown> = {}, headers?: Record<string, string>) =>
         mcpCall(app.baseUrl, 'tools/call', { name: 'get_company_activations', arguments: arguments_ }, { name: 'get_company_activations', headers });
 
+    it('requires a companyKey', async () => {
+        const { body } = await call();
+
+        expect(body.result.isError).toBe(true);
+        expect(body.result.content[0].text).toContain('companyKey');
+    });
+
     it('requests active purchases for the resolved company and returns stable product fields', async () => {
         const requests: Array<{ url: string; headers: Headers }> = [];
         vi.stubGlobal('fetch', async (input: any, init?: any) => {
@@ -90,11 +97,11 @@ describe('get_company_activations', () => {
             return realFetch(input, init);
         });
 
-        const { body } = await call({}, { CompanyKey: 'company-from-host' });
+        const { body } = await call({ companyKey: '123e4567-e89b-12d3-a456-426614174000' });
 
         expect(requests).toHaveLength(1);
         expect(requests[0]?.url).toContain('/api/elsa/purchases?PurchaseStatus=1');
-        expect(requests[0]?.headers.get('CompanyKey')).toBe('company-from-host');
+        expect(requests[0]?.headers.get('CompanyKey')).toBe('123e4567-e89b-12d3-a456-426614174000');
         expect(body.result.structuredContent).toEqual({
             products: [{
                 purchaseId: 10,
@@ -113,7 +120,7 @@ describe('get_company_activations', () => {
     it('returns an empty list when the company has no active purchases', async () => {
         stubUnimicro({ '/api/elsa/purchases': [] });
 
-        const { body } = await call({}, { CompanyKey: 'company-from-host' });
+        const { body } = await call({ companyKey: '123e4567-e89b-12d3-a456-426614174000' });
 
         expect(body.result.structuredContent).toEqual({ products: [] });
         expect(body.result.content[0].text).toBe('0 activated items.');
