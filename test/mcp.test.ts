@@ -97,7 +97,10 @@ describe('get_company_activations', () => {
             return realFetch(input, init);
         });
 
-        const { body } = await call({ companyKey: '123e4567-e89b-12d3-a456-426614174000' });
+        const { body } = await call({
+            companyKey: '123e4567-e89b-12d3-a456-426614174000',
+            search: 'pay',
+        });
 
         expect(requests).toHaveLength(1);
         expect(requests[0]?.url).toContain('/api/elsa/purchases?PurchaseStatus=1');
@@ -115,6 +118,40 @@ describe('get_company_activations', () => {
             }],
         });
         expect(body.result.content[0].text).toBe('1 activated item.');
+    });
+
+    it('passes a requested purchase status and filters product search locally', async () => {
+        const requests: string[] = [];
+        vi.stubGlobal('fetch', async (input: any, init?: any) => {
+            const url = input instanceof URL ? input.href : typeof input === 'string' ? input : input.url;
+            if (url.includes('/api/elsa/purchases')) {
+                requests.push(url);
+                return new Response(JSON.stringify([
+                    { ID: 12, ProductName: 'Accounting', ProductKey: 'accounting', PurchaseStatus: 2 },
+                    { ID: 13, ProductName: 'Payroll', ProductKey: 'payroll', PurchaseStatus: 2 },
+                    { ID: 14, ProductName: 'Accounting', ProductKey: 'accounting', PurchaseStatus: 1 },
+                ]), { headers: { 'content-type': 'application/json' } });
+            }
+            return realFetch(input, init);
+        });
+
+        const { body } = await call({
+            companyKey: '123e4567-e89b-12d3-a456-426614174000',
+            purchaseStatus: 2,
+            search: 'COUNT',
+        });
+
+        expect(requests[0]).toContain('/api/elsa/purchases?PurchaseStatus=2');
+        expect(body.result.structuredContent.products).toEqual([{
+            purchaseId: 12,
+            productId: null,
+            productKey: 'accounting',
+            productName: 'Accounting',
+            purchaseStatus: 2,
+            startDate: null,
+            endDate: null,
+            productTypeName: null,
+        }]);
     });
 
     it('returns an empty list when the company has no active purchases', async () => {
