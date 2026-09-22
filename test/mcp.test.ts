@@ -59,6 +59,15 @@ describe('tools/list', () => {
         expect(tool.inputSchema).toBeTruthy();
         expect(tool.outputSchema).toBeTruthy();
         expect(tool.annotations.readOnlyHint).toBe(true);
+
+        const activationsTool = tools.find(t => t.name === 'get_company_activations');
+        expect(activationsTool.inputSchema.properties.purchaseStatus).toMatchObject({
+            type: 'number',
+            enum: [0, 1, 5, 10, 20, 25, 30, 35],
+            default: 1,
+        });
+        expect(activationsTool.inputSchema.properties.purchaseStatus.description).toContain('1 Accepted');
+        expect(activationsTool.inputSchema.properties.purchaseStatus.description).toContain('35 ConsentRequired');
     });
 });
 
@@ -71,6 +80,16 @@ describe('get_company_activations', () => {
 
         expect(body.result.isError).toBe(true);
         expect(body.result.content[0].text).toContain('companyKey');
+    });
+
+    it('rejects an unknown purchase status', async () => {
+        const { body } = await call({
+            companyKey: '123e4567-e89b-12d3-a456-426614174000',
+            purchaseStatus: 2,
+        });
+
+        expect(body.result.isError).toBe(true);
+        expect(body.result.content[0].text).toContain('purchaseStatus');
     });
 
     it('requests active purchases for the resolved company and returns stable product fields', async () => {
@@ -127,8 +146,8 @@ describe('get_company_activations', () => {
             if (url.includes('/api/elsa/purchases')) {
                 requests.push(url);
                 return new Response(JSON.stringify([
-                    { ID: 12, ProductName: 'Accounting', ProductKey: 'accounting', PurchaseStatus: 2 },
-                    { ID: 13, ProductName: 'Payroll', ProductKey: 'payroll', PurchaseStatus: 2 },
+                    { ID: 12, ProductName: 'Accounting', ProductKey: 'accounting', PurchaseStatus: 5 },
+                    { ID: 13, ProductName: 'Payroll', ProductKey: 'payroll', PurchaseStatus: 5 },
                     { ID: 14, ProductName: 'Accounting', ProductKey: 'accounting', PurchaseStatus: 1 },
                 ]), { headers: { 'content-type': 'application/json' } });
             }
@@ -137,17 +156,17 @@ describe('get_company_activations', () => {
 
         const { body } = await call({
             companyKey: '123e4567-e89b-12d3-a456-426614174000',
-            purchaseStatus: 2,
+            purchaseStatus: 5,
             productName: 'Accounting',
         });
 
-        expect(requests[0]).toContain('/api/elsa/purchases?PurchaseStatus=2&productName=Accounting');
+        expect(requests[0]).toContain('/api/elsa/purchases?PurchaseStatus=5&productName=Accounting');
         expect(body.result.structuredContent.products).toEqual([{
             purchaseId: 12,
             productId: null,
             productKey: 'accounting',
             productName: 'Accounting',
-            purchaseStatus: 2,
+            purchaseStatus: 5,
             startDate: null,
             endDate: null,
             productTypeName: null,

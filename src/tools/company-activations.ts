@@ -2,12 +2,27 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/server';
 import type { ToolContext } from './context.js';
 
+enum PurchaseStatus {
+    Unknown = 0,
+    Accepted = 1,
+    Rejected = 5,
+    Pending = 10,
+    RequestSent = 20,
+    RequestApproved = 25,
+    RequestRejected = 30,
+    ConsentRequired = 35,
+}
+
+const purchaseStatusDescription =
+    'Purchase status: 0 Unknown, 1 Accepted, 5 Rejected, 10 Pending, 20 RequestSent, ' +
+    '25 RequestApproved, 30 RequestRejected, 35 ConsentRequired.';
+
 const activeProductSchema = z.object({
     purchaseId: z.union([z.number(), z.string()]).nullable().describe('The purchase record ID, when provided.'),
     productId: z.union([z.number(), z.string()]).nullable().describe('The product ID, when provided.'),
     productKey: z.string().nullable().describe('The stable product key, when provided.'),
     productName: z.string().nullable().describe('The product name, when provided.'),
-    purchaseStatus: z.union([z.number(), z.string()]).nullable().describe('The purchase status returned by Unimicro.'),
+    purchaseStatus: z.union([z.number(), z.string()]).nullable().describe(purchaseStatusDescription),
     startDate: z.string().nullable().describe('The activation start date, when provided.'),
     endDate: z.string().nullable().describe('The activation end date, when provided.'),
     productTypeName: z.string().nullable().describe('The product type name, when provided.'),
@@ -35,7 +50,7 @@ export function registerCompanyActivationsTool(server: McpServer, ctx: ToolConte
                 'use purchaseStatus to inspect another purchase status or productName to find one product.',
             inputSchema: z.object({
                 companyKey: z.string().uuid().describe('The company to inspect.'),
-                purchaseStatus: z.number().int().min(0).default(1).describe('Purchase status to request. Defaults to 1 (accepted/active).'),
+                purchaseStatus: z.nativeEnum(PurchaseStatus).default(PurchaseStatus.Accepted).describe(purchaseStatusDescription),
                 productName: z.string().trim().min(1).optional().describe('Exact product name to filter on server side.'),
             }),
             outputSchema: z.object({
