@@ -32,32 +32,27 @@ export function registerCompanyActivationsTool(server: McpServer, ctx: ToolConte
             description:
                 'List the modules, integrations, and products activated for a Unimicro company. ' +
                 'Pass the companyKey for the company to inspect. Defaults to accepted/active purchases; ' +
-                'use purchaseStatus to inspect another purchase status and search to match product name or key.',
+                'use purchaseStatus to inspect another purchase status or productName to find one product.',
             inputSchema: z.object({
                 companyKey: z.string().uuid().describe('The company to inspect.'),
                 purchaseStatus: z.number().int().min(0).default(1).describe('Purchase status to request. Defaults to 1 (accepted/active).'),
-                search: z.string().trim().min(1).optional().describe('Case-insensitive text to match against product name or key.'),
+                productName: z.string().trim().min(1).optional().describe('Exact product name to filter on server side.'),
             }),
             outputSchema: z.object({
                 products: z.array(activeProductSchema),
             }),
             annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
         },
-        async ({ companyKey, purchaseStatus, search }) => {
+        async ({ companyKey, purchaseStatus, productName }) => {
             const resolvedCompanyKey = await ctx.resolveCompanyKey(companyKey);
             const rows = await ctx.api.get<RawLicensePurchase[]>('api/elsa/purchases', {
                 companyKey: resolvedCompanyKey,
-                query: { PurchaseStatus: purchaseStatus },
+                query: { PurchaseStatus: purchaseStatus, productName },
             });
 
-            const searchTerm = search?.toLocaleLowerCase();
             const products = (rows ?? [])
                 .filter(row => row.PurchaseStatus === purchaseStatus || row.PurchaseStatus === String(purchaseStatus))
-                .filter(row => {
-                    if (!searchTerm) return true;
-                    return [row.ProductName, row.ProductKey]
-                        .some(value => value?.toLocaleLowerCase().includes(searchTerm));
-                })
+                .filter(row => !productName || row.ProductName?.toLocaleLowerCase() === productName.toLocaleLowerCase())
                 .map(row => ({
                     purchaseId: row.ID ?? null,
                     productId: row.ProductID ?? null,

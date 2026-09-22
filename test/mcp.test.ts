@@ -99,11 +99,11 @@ describe('get_company_activations', () => {
 
         const { body } = await call({
             companyKey: '123e4567-e89b-12d3-a456-426614174000',
-            search: 'pay',
+            productName: 'Payroll',
         });
 
         expect(requests).toHaveLength(1);
-        expect(requests[0]?.url).toContain('/api/elsa/purchases?PurchaseStatus=1');
+        expect(requests[0]?.url).toContain('/api/elsa/purchases?PurchaseStatus=1&productName=Payroll');
         expect(requests[0]?.headers.get('CompanyKey')).toBe('123e4567-e89b-12d3-a456-426614174000');
         expect(body.result.structuredContent).toEqual({
             products: [{
@@ -120,7 +120,7 @@ describe('get_company_activations', () => {
         expect(body.result.content[0].text).toBe('1 activated item.');
     });
 
-    it('passes a requested purchase status and filters product search locally', async () => {
+    it('passes a requested purchase status and product name to the server', async () => {
         const requests: string[] = [];
         vi.stubGlobal('fetch', async (input: any, init?: any) => {
             const url = input instanceof URL ? input.href : typeof input === 'string' ? input : input.url;
@@ -138,10 +138,10 @@ describe('get_company_activations', () => {
         const { body } = await call({
             companyKey: '123e4567-e89b-12d3-a456-426614174000',
             purchaseStatus: 2,
-            search: 'COUNT',
+            productName: 'Accounting',
         });
 
-        expect(requests[0]).toContain('/api/elsa/purchases?PurchaseStatus=2');
+        expect(requests[0]).toContain('/api/elsa/purchases?PurchaseStatus=2&productName=Accounting');
         expect(body.result.structuredContent.products).toEqual([{
             purchaseId: 12,
             productId: null,

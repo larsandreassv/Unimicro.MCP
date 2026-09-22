@@ -89,7 +89,7 @@ Sign in when the browser opens, then call `check_api_access` — it lists the co
 account can reach, which confirms the whole chain works. Use `get_company_activations` to
 list the modules, integrations, and products activated for a selected company; it requires
 the company's `companyKey`. It defaults to accepted/active purchases (`purchaseStatus: 1`)
-and supports optional `purchaseStatus` and case-insensitive `search` filters.
+and supports optional `purchaseStatus` and exact server-side `productName` filters.
 
 Need a bearer token for `curl` or a script? `npm run token` prints a sign-in URL and hands
 you one.
