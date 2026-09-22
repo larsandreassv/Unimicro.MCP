@@ -51,7 +51,7 @@ describe('tools/list', () => {
         const tools: any[] = body.result.tools;
 
         expect(tools.map(t => t.name)).toContain('check_api_access');
-        expect(tools.map(t => t.name)).toContain('get_active_products');
+        expect(tools.map(t => t.name)).toContain('get_company_activations');
 
         const [tool] = tools;
         expect(tool.title).toBeTruthy();
@@ -62,9 +62,9 @@ describe('tools/list', () => {
     });
 });
 
-describe('get_active_products', () => {
+describe('get_company_activations', () => {
     const call = (arguments_: Record<string, unknown> = {}, headers?: Record<string, string>) =>
-        mcpCall(app.baseUrl, 'tools/call', { name: 'get_active_products', arguments: arguments_ }, { name: 'get_active_products', headers });
+        mcpCall(app.baseUrl, 'tools/call', { name: 'get_company_activations', arguments: arguments_ }, { name: 'get_company_activations', headers });
 
     it('requests active purchases for the resolved company and returns stable product fields', async () => {
         const requests: Array<{ url: string; headers: Headers }> = [];
@@ -107,7 +107,7 @@ describe('get_active_products', () => {
                 productTypeName: null,
             }],
         });
-        expect(body.result.content[0].text).toBe('1 active product.');
+        expect(body.result.content[0].text).toBe('1 activated item.');
     });
 
     it('returns an empty list when the company has no active purchases', async () => {
@@ -116,7 +116,7 @@ describe('get_active_products', () => {
         const { body } = await call({}, { CompanyKey: 'company-from-host' });
 
         expect(body.result.structuredContent).toEqual({ products: [] });
-        expect(body.result.content[0].text).toBe('0 active products.');
+        expect(body.result.content[0].text).toBe('0 activated items.');
     });
 });
 

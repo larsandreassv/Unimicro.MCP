@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import type { ToolContext } from './context.js';
-import { registerActiveProductsTool } from './active-products.js';
+import { registerCompanyActivationsTool } from './company-activations.js';
 import { registerCheckAccessTool } from './check-access.js';
 
 /**
@@ -12,7 +12,7 @@ import { registerCheckAccessTool } from './check-access.js';
  */
 export function registerTools(server: McpServer, ctx: ToolContext): void {
     registerCheckAccessTool(server, ctx);
-    registerActiveProductsTool(server, ctx);
+    registerCompanyActivationsTool(server, ctx);
 }
 
 export { createToolContext, type ToolContext } from './context.js';

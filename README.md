@@ -86,9 +86,9 @@ servers already listed — click **Add Servers → + Add manually**, then choose
 **Streamable HTTP** and URL `http://localhost:3000/mcp`, and Connect.
 
 Sign in when the browser opens, then call `check_api_access` — it lists the companies your
-account can reach, which confirms the whole chain works. Use `get_active_products` to list
-the products activated for a selected company; pass `companyKey` when your account can
-access more than one company.
+account can reach, which confirms the whole chain works. Use `get_company_activations` to
+list the modules, integrations, and products activated for a selected company; pass
+`companyKey` when your account can access more than one company.
 
 Need a bearer token for `curl` or a script? `npm run token` prints a sign-in URL and hands
 you one.
@@ -110,7 +110,7 @@ src/
     ├── index.ts           the one-line registry
     ├── context.ts         what every tool is handed
     ├── check-access.ts    connection and company diagnostics
-    └── active-products.ts list activated products for a company
+    └── company-activations.ts list activated modules, integrations, and products
 ```
 
 ---

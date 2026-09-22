@@ -24,13 +24,13 @@ interface RawLicensePurchase {
     ProductTypeName?: string;
 }
 
-export function registerActiveProductsTool(server: McpServer, ctx: ToolContext): void {
+export function registerCompanyActivationsTool(server: McpServer, ctx: ToolContext): void {
     server.registerTool(
-        'get_active_products',
+        'get_company_activations',
         {
-            title: 'Get active products',
+            title: 'Get company activations',
             description:
-                'List the products activated for a Unimicro company. ' +
+                'List the modules, integrations, and products activated for a Unimicro company. ' +
                 'Omit companyKey unless company selection is ambiguous.',
             inputSchema: z.object({
                 companyKey: z.string().uuid().optional().describe('Which company. Omit unless company selection is ambiguous.'),
@@ -61,7 +61,7 @@ export function registerActiveProductsTool(server: McpServer, ctx: ToolContext):
                 }));
 
             return {
-                content: [{ type: 'text', text: `${products.length} active ${products.length === 1 ? 'product' : 'products'}.` }],
+                content: [{ type: 'text', text: `${products.length} activated ${products.length === 1 ? 'item' : 'items'}.` }],
                 structuredContent: { products },
             };
         },
